@@ -1,4 +1,7 @@
 
+#creamos constantes para las tarifas de parada y movimiento
+TARIFA_PARADO = 0.02
+TARIFA_MOVIMIENTO = 0.05
 # Creamos el menú de ayuda, con sus opciones disponibles
 AYUDA = """
 Taxímetro digital
@@ -9,6 +12,15 @@ Taxímetro digital
  a  ver esta ayuda
  s  salir
 """
+
+#Creamos esta función para que el taxímetro sepa cuánto tiene que cobrar por cada segundo
+def tarifa(estado):
+    # Si el taxi está parado, devolvemos la tarifa de parada
+    if estado == "parado":
+        return TARIFA_PARADO
+    else:
+    # Si el taxi no está parado, devolvemos la tarifa de movimiento
+        return TARIFA_MOVIMIENTO
 
 # Creamos la función principal
 def main():
