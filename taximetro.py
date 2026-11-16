@@ -1,8 +1,10 @@
 #importamos librerías necesarias
 import time
+
 #creamos constantes para las tarifas de parada y movimiento
 TARIFA_PARADO = 0.02
 TARIFA_MOVIMIENTO = 0.05
+
 # Creamos el menú de ayuda, con sus opciones disponibles
 AYUDA = """
 Taxímetro digital
@@ -22,6 +24,24 @@ def tarifa(estado):
     else:
     # Si el taxi no está parado, devolvemos la tarifa de movimiento
         return TARIFA_MOVIMIENTO
+
+#creamos la funcion para cerrar el tramo de la carrera y calcular el importe
+def cerrar_tramo(carrera):
+    # Calculamos el tiempo transcurrido desde que se inició el tramo.
+    ahora = time.monotonic()
+
+    #“Calculamos los segundos transcurridos desde el inicio del tramo
+    segundos = ahora - carrera["desde"]
+    
+    #calculamos el coste del tramo multiplicando los segundos por la tarifa correspondiente al estado del taxi
+    coste = segundos * tarifa(carrera["estado"])
+    
+    # Sumamos el coste del tramo al importe acumulado de la carrera
+    carrera["importe"] += coste
+
+    # Actualizamos el momento de inicio del siguiente tramo
+    carrera["desde"] = ahora
+
 
 # Creamos la función principal
 def main():
@@ -45,7 +65,7 @@ def main():
                 "importe": 0.0
             }
             print("Carrera iniciada. El taxi está PARADO.")
-            print(carrera)
+            
 
         # Si la orden es "s", nos despedimos y salimos del bucle
         elif orden == "s":
