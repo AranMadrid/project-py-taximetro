@@ -1,4 +1,5 @@
-
+#importamos librerías necesarias
+import time
 #creamos constantes para las tarifas de parada y movimiento
 TARIFA_PARADO = 0.02
 TARIFA_MOVIMIENTO = 0.05
@@ -27,14 +28,27 @@ def main():
     # Mostramos los resultados de la ayuda
     print(AYUDA)
 
+#
+    carrera = None
+
     # Creamos un bucle para pedir órdenes al conductor
     # strip() quita los espacios al inicio y al final
     # lower() convierte las letras a minúsculas
     while True:
         orden = input("Introduce una orden: ").strip().lower()
 
+        if orden == "i":
+            # Si la orden es "i", iniciamos una nueva carrera
+            carrera = {
+                "estado": "parado",
+                "desde": time.monotonic(),
+                "importe": 0.0
+            }
+            print("Carrera iniciada. El taxi está PARADO.")
+            print(carrera)
+
         # Si la orden es "s", nos despedimos y salimos del bucle
-        if orden == "s":
+        elif orden == "s":
             print("Hasta luego.")
             break
 
