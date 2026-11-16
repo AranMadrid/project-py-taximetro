@@ -87,17 +87,25 @@ def main():
             # Cambiamos el estado según la orden introducida
             carrera["estado"] = "movimiento" if orden == "m" else "parado"
 
-
             # Mostramos el estado del taxi y el importe acumulado
-            #
             print(f"Estado: {carrera['estado'].upper()}. Llevas {carrera['importe']:.2f} €.")
 
+        
+        # Si escribimos "f", queremos terminar la carrera
+        elif orden == "f":
+            # Calculamos lo que falta por cobrar y lo sumamos al total
+            cerrar_tramo(carrera)
+            # Mostramos cuánto tiene que pagar el cliente
+            print(f"Carrera finalizada. Total a cobrar: {carrera['importe']:.2f} €")
+            # Indicamos que ya no hay carrera para poder empezar otra
+            carrera = None
 
-
+            
 
         # Si no es "s" ni "a", mostramos un mensaje de error
         else:
             print("Orden desconocida. Escribe 'a' para ver la ayuda.")
+            
 
 
 
