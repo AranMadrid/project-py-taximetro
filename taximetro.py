@@ -76,9 +76,29 @@ def main():
         elif orden == "a":
             print(AYUDA)
 
+        
+        # Si la orden es "p" o "m", cambiamos el estado del taxi entre parado y movimiento
+        elif orden in ("p", "m"):
+            
+        
+            # Cobramos el tramo anterior antes de cambiar el estado
+            cerrar_tramo(carrera)
+
+            # Cambiamos el estado según la orden introducida
+            carrera["estado"] = "movimiento" if orden == "m" else "parado"
+
+
+            # Mostramos el estado del taxi y el importe acumulado
+            #
+            print(f"Estado: {carrera['estado'].upper()}. Llevas {carrera['importe']:.2f} €.")
+
+
+
+
         # Si no es "s" ni "a", mostramos un mensaje de error
         else:
             print("Orden desconocida. Escribe 'a' para ver la ayuda.")
+
 
 
 # Ejecutamos la función principal al iniciar el programa
