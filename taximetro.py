@@ -11,8 +11,17 @@ import json
 # PASO 2: Importamos Path para encontrar los archivos
 from pathlib import Path
 
+# PASO 3: Importamos csv para guardar las carreras en un archivo parecido a una tabla
+# PASO 3: Cada carrera ocupará una fila y los datos estarán separados por comas
+import csv
+
+# PASO 3: Importamos datetime para saber el día y la hora exactos
+from datetime import datetime
+
+
 # Creamos un logger (como una libreta) para registrar lo que ocurre en el taxímetro
 log = logging.getLogger("taximetro")
+
 
 # creamos constantes para las tarifas por defecto del taxímetro
 TARIFAS_POR_DEFECTO = {
@@ -20,12 +29,18 @@ TARIFAS_POR_DEFECTO = {
     "tarifa_movimiento": 0.05
 }
 
+
 # Creamos constantes para las tarifas que se van a usar en el programa
 CARPETA = Path(__file__).parent
 
 # configuramos las tarifas por defecto para el taxímetro
 CONFIG = CARPETA / "config.json"
 LOG = CARPETA / "taximetro.log"
+
+# PASO 3: Indicamos dónde se guardará el historial de carreras
+# PASO 3: El archivo historial.csv estará en la misma carpeta que taximetro.py
+HISTORIAL = CARPETA / "historial.csv"
+
 
 AYUDA = """
 Taxímetro digital
@@ -36,6 +51,7 @@ Taxímetro digital
  a  ver esta ayuda
  s  salir
 """
+
 
 # PASO 2: Creamos una función para leer las tarifas del JSON
 def cargar_tarifas(ruta=CONFIG):
@@ -104,6 +120,54 @@ def cerrar_tramo(carrera, tarifas):
     carrera["desde"] = ahora
 
 
+# PASO 3: Esta función guarda una carrera cuando el cliente termina su viaje
+# PASO 3: Recibe tres datos:
+# PASO 3: inicio = día y hora en los que comenzó la carrera
+# PASO 3: duracion = cuánto duró la carrera en segundos
+# PASO 3: importe = dinero total que debe pagar el cliente
+# PASO 3: ruta = archivo donde queremos guardar esos datos
+def guardar_carrera(inicio, duracion, importe, ruta=HISTORIAL):
+
+    # PASO 3: Comprobamos si todavía no existe el archivo del historial
+    # PASO 3: exists() pregunta si un archivo existe
+    # PASO 3: not significa lo contrario, es decir, que NO existe
+    # PASO 3: Si no existe, nuevo será True; si existe, será False
+    nuevo = not Path(ruta).exists()
+
+    # PASO 3: Abrimos el archivo para escribir la carrera
+    # PASO 3: "a" significa añadir datos al final SIN borrar los anteriores
+    # PASO 3: newline="" evita que aparezcan filas vacías extra en Windows
+    # PASO 3: encoding="utf-8" permite guardar correctamente los caracteres
+    # PASO 3: with cierra automáticamente el archivo cuando terminamos
+    with open(ruta, "a", newline="", encoding="utf-8") as fichero:
+
+        # PASO 3: Preparamos una herramienta que escribe filas separadas por comas
+        escritor = csv.writer(fichero)
+
+        # PASO 3: Si el archivo es nuevo, escribimos los nombres de las columnas
+        # PASO 3: Esto se llama cabecera y solo debe aparecer una vez
+        if nuevo:
+            escritor.writerow([
+                "fecha",
+                "hora",
+                "duracion_s",
+                "importe"
+            ])
+
+        # PASO 3: Ahora añadimos una fila con los datos de la carrera
+        # PASO 3: strftime convierte la fecha y la hora al formato que necesitamos
+        # PASO 3: %Y-%m-%d significa año-mes-día
+        # PASO 3: %H:%M:%S significa hora:minuto:segundo
+        # PASO 3: round redondea la duración a segundos enteros
+        # PASO 3: :.2f muestra el precio con dos decimales, por ejemplo 0.20
+        escritor.writerow([
+            inicio.strftime("%Y-%m-%d"),
+            inicio.strftime("%H:%M:%S"),
+            round(duracion),
+            f"{importe:.2f}"
+        ])
+
+
 # Creamos una función para configurar el logger
 def configurar_log():
     logging.basicConfig(
@@ -157,7 +221,18 @@ def main():
             carrera = {
                 "estado": "parado",
                 "desde": time.monotonic(),
-                "importe": 0.0
+                "importe": 0.0,
+
+                # PASO 3: Guardamos la fecha y la hora reales de inicio
+                # PASO 3: datetime.now() nos dice qué día y a qué hora empieza el viaje
+                # PASO 3: Estos datos aparecerán después en historial.csv
+                "inicio": datetime.now(),
+
+                # PASO 3: Ponemos en marcha un cronómetro para toda la carrera
+                # PASO 3: time.monotonic() nos permite medir los segundos transcurridos
+                # PASO 3: Este valor no cambia hasta que termina la carrera
+                # PASO 3: Es distinto de "desde", que cambia cada vez que el taxi cambia de estado
+                "inicio_mono": time.monotonic()
             }
 
             # Registramos un mensaje de información indicando que se ha iniciado una carrera
@@ -247,8 +322,28 @@ def main():
             # PASO 2: Pasamos las tarifas para calcular el último tramo
             cerrar_tramo(carrera, tarifas)
 
+            # PASO 3: Calculamos cuánto ha durado toda la carrera
+            # PASO 3: Restamos el tiempo de inicio al tiempo actual
+            # PASO 3: round convierte el resultado en segundos enteros redondeados
+            duracion = round(time.monotonic() - carrera["inicio_mono"])
+
+            # PASO 3: Llamamos a la función que guarda la carrera en historial.csv
+            # PASO 3: Le pasamos cuándo empezó, cuánto duró y cuánto costó
+            guardar_carrera(
+                carrera["inicio"],
+                duracion,
+                carrera["importe"]
+            )
+
             # Registramos un mensaje de información indicando que la carrera ha finalizado y el importe total
-            log.info("Carrera finalizada: %.2f €", carrera["importe"])
+            # PASO 3: Ahora el log también dice que la carrera se ha guardado
+            # PASO 3: %d muestra la duración como un número entero
+            # PASO 3: %.2f muestra el precio con dos decimales
+            log.info(
+                "Carrera guardada: %d s, %.2f €",
+                duracion,
+                carrera["importe"]
+            )
 
             # Mostramos cuánto tiene que pagar el cliente
             print(f"Carrera finalizada. Total a cobrar: {carrera['importe']:.2f} €")
