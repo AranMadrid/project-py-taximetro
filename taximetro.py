@@ -87,17 +87,28 @@ def cargar_tarifas(ruta=CONFIG):
 
 # Creamos esta función para que el taxímetro sepa cuánto tiene que cobrar por cada segundo
 # PASO 2: Añadimos las tarifas que hemos leído del archivo
-def tarifa(estado, tarifas):
+# PASO 5: Ahora esta función sustituye a tarifa() del paso anterior
+# PASO 5: Recibe los segundos, el estado del taxi y las tarifas
+# PASO 5: Multiplica el tiempo por el precio de cada segundo
+# PASO 5: No utiliza el reloj, no abre archivos y no muestra mensajes
+def importe_tramo(segundos, estado, tarifas):
+
+    # PASO 5: Comprobamos que los segundos no sean negativos
+    # PASO 5: Si lo son, lanzamos un error porque el tiempo no puede ser negativo
+    if segundos < 0:
+        raise ValueError("Los segundos no pueden ser negativos")
 
     # Si el taxi está parado, devolvemos la tarifa de parada
     if estado == "parado":
         # PASO 2: Buscamos la tarifa de parada en el diccionario
-        return tarifas["tarifa_parado"]
+        # PASO 5: Multiplicamos los segundos por esa tarifa
+        return segundos * tarifas["tarifa_parado"]
 
     else:
         # Si el taxi no está parado, devolvemos la tarifa de movimiento
         # PASO 2: Buscamos la tarifa de movimiento en el diccionario
-        return tarifas["tarifa_movimiento"]
+        # PASO 5: Multiplicamos los segundos por esa tarifa
+        return segundos * tarifas["tarifa_movimiento"]
 
 
 # creamos la funcion para cerrar el tramo de la carrera y calcular el importe
@@ -112,7 +123,9 @@ def cerrar_tramo(carrera, tarifas):
 
     # calculamos el coste del tramo multiplicando los segundos por la tarifa correspondiente al estado del taxi
     # PASO 2: Utilizamos las tarifas del diccionario
-    coste = segundos * tarifa(carrera["estado"], tarifas)
+    # PASO 5: Ahora usamos importe_tramo() para hacer el cálculo
+    # PASO 5: Le pasamos el tiempo, si el taxi está parado o en movimiento, y las tarifas
+    coste = importe_tramo(segundos, carrera["estado"], tarifas)
 
     # Sumamos el coste del tramo al importe acumulado de la carrera
     carrera["importe"] += coste
