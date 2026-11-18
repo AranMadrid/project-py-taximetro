@@ -1,7 +1,12 @@
 
 #importamos librerías necesarias
 import time
-#creamos constantes para las tarifas de parada y movimiento
+#permite crear registros de eventos que ocurren durante la ejecución del programa
+import logging
+# Creamos un logger (como una libreta) para registrar lo que ocurre en el taxímetro
+log = logging.getLogger("taximetro")
+
+
 TARIFA_PARADO = 0.02
 TARIFA_MOVIMIENTO = 0.05
 # Creamos el menú de ayuda, con sus opciones disponibles
@@ -36,9 +41,24 @@ def cerrar_tramo(carrera):
     # Actualizamos el momento de inicio del siguiente tramo
     carrera["desde"] = ahora
 
+# Creamos una función para configurar el logger
+def configurar_log():
+    logging.basicConfig(
+        filename="taximetro.log",
+        level=logging.INFO,
+        encoding="utf-8",
+        format="%(asctime)s %(levelname)s %(message)s"
+    )
+
 # Creamos la función principal
 def main():
-    # Mostramos los resultados de la ayuda
+   # Configuramos el logger para que registre los eventos en un archivo
+    configurar_log()
+
+    # Registramos un mensaje de información indicando que el taxímetro ha arrancado
+    log.info("Arranque del taxímetro")
+
+    # Mostramos la ayuda al iniciar el programa
     print(AYUDA)
     #
     carrera = None
@@ -66,6 +86,11 @@ def main():
                 "desde": time.monotonic(),
                 "importe": 0.0
             }
+
+            # Registramos un mensaje de información indicando que se ha iniciado una carrera
+            log.info("Carrera iniciada")
+
+            # Mostramos un mensaje indicando que la carrera ha comenzado y que el taxi está parado
             print("Carrera iniciada. El taxi está PARADO.")
 
         # Si la orden es "s", nos despedimos y salimos del bucle
@@ -76,6 +101,10 @@ def main():
                 print("Hay una carrera en curso. Finalízala con 'f' antes de salir.")
                 # Volvemos a pedir otra orden sin cerrar el programa
                 continue
+
+            # Registramos un mensaje de información indicando que el taxímetro se ha cerrado
+            log.info("Cierre del taxímetro")
+
 
             print("Hasta luego.")
             break
@@ -111,6 +140,11 @@ def main():
             # Cambiamos el estado según la orden introducida
             carrera["estado"] = "movimiento" if orden == "m" else "parado"
 
+
+            # Registramos un mensaje de información indicando el cambio de estado y el importe acumulado
+            log.info("Cambio de estado a %s (%.2f € acumulados)", carrera["estado"], carrera["importe"])
+
+
             # Mostramos el estado del taxi y el importe acumulado
             print(f"Estado: {carrera['estado'].upper()}. Llevas {carrera['importe']:.2f} €.")
 
@@ -126,6 +160,11 @@ def main():
             # Calculamos lo que falta por cobrar y lo sumamos al total
             cerrar_tramo(carrera)
 
+
+            # Registramos un mensaje de información indicando que la carrera ha finalizado y el importe total
+            log.info("Carrera finalizada: %.2f €", carrera["importe"])
+
+
             # Mostramos cuánto tiene que pagar el cliente
             print(f"Carrera finalizada. Total a cobrar: {carrera['importe']:.2f} €")
 
@@ -134,6 +173,10 @@ def main():
 
         # Si no es "s" ni "a", mostramos un mensaje de error
         else:
+            # Registramos un mensaje de advertencia indicando que se ha introducido una orden desconocida
+            log.warning("Orden desconocida: %r", orden)
+
+            # Mostramos un mensaje indicando que la orden no es válida y recordamos que se puede ver la ayuda con "a"
             print("Orden desconocida. Escribe 'a' para ver la ayuda.")
 
 # Ejecutamos la función principal al iniciar el programa
