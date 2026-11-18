@@ -48,6 +48,7 @@ Taxímetro digital
  p  el taxi está parado
  m  el taxi está en movimiento
  f  finalizar la carrera y ver el total
+ h  historial de carreras de hoy
  a  ver esta ayuda
  s  salir
 """
@@ -168,6 +169,48 @@ def guardar_carrera(inicio, duracion, importe, ruta=HISTORIAL):
         ])
 
 
+# PASO 4: Esta función busca las carreras que hemos hecho hoy
+# PASO 4: Devuelve una lista con las carreras encontradas
+# PASO 4: No muestra nada en pantalla, solo busca y devuelve los datos
+def carreras_de_hoy(ruta=HISTORIAL):
+
+    # PASO 4: Creamos una lista vacía donde guardaremos las carreras de hoy
+    carreras = []
+
+    # PASO 4: Comprobamos si existe el archivo historial.csv
+    # PASO 4: Si no existe, devolvemos la lista vacía para evitar un error
+    if not Path(ruta).exists():
+        return carreras
+
+    # PASO 4: Averiguamos la fecha de hoy
+    # PASO 4: La escribimos como año-mes-día, igual que en el CSV
+    hoy = datetime.now().strftime("%Y-%m-%d")
+
+    # PASO 4: Abrimos el archivo para leer las carreras guardadas
+    # PASO 4: newline="" evita problemas con los saltos de línea
+    # PASO 4: with cerrará el archivo automáticamente cuando terminemos
+    with open(ruta, newline="", encoding="utf-8") as fichero:
+
+        # PASO 4: DictReader lee cada fila como un diccionario
+        # PASO 4: Usa los nombres de la cabecera para identificar los datos
+        # PASO 4: Por ejemplo, fila["hora"] contiene la hora de una carrera
+        lector = csv.DictReader(fichero)
+
+        # PASO 4: Recorremos las carreras guardadas, una por una
+        for fila in lector:
+
+            # PASO 4: Comparamos la fecha de la carrera con la fecha de hoy
+            # PASO 4: Si coinciden, significa que la carrera se hizo hoy
+            if fila["fecha"] == hoy:
+
+                # PASO 4: Añadimos esa carrera a nuestra lista
+                carreras.append(fila)
+
+    # PASO 4: Devolvemos todas las carreras que hemos encontrado
+    # PASO 4: Si no hay ninguna de hoy, devolvemos una lista vacía
+    return carreras
+
+
 # Creamos una función para configurar el logger
 def configurar_log():
     logging.basicConfig(
@@ -245,6 +288,7 @@ def main():
         elif orden == "s":
 
             # Comprobamos si todavía hay una carrera sin terminar
+            # Si la hay, avisamos de que primero debemos terminarla
             if carrera is not None:
 
                 # Si la hay, avisamos de que primero debemos terminarla
@@ -262,6 +306,46 @@ def main():
         # Si la orden es "a", mostramos la ayuda
         elif orden == "a":
             print(AYUDA)
+
+        # PASO 4: Si escribimos "h", mostramos las carreras de hoy
+        elif orden == "h":
+
+            # PASO 4: Llamamos a la función que busca las carreras de hoy
+            # PASO 4: Guardamos su resultado en una lista
+            carreras = carreras_de_hoy()
+
+            # PASO 4: Si la lista está vacía, no hay carreras de hoy
+            # PASO 4: Esto también funciona si todavía no existe historial.csv
+            if not carreras:
+                print("Hoy no hay carreras registradas.")
+
+            else:
+                # PASO 4: Empezamos el total del día en cero euros
+                total = 0.0
+
+                # PASO 4: Recorremos las carreras de hoy, una por una
+                for fila in carreras:
+
+                    # PASO 4: El CSV guarda todos los datos como texto
+                    # PASO 4: Convertimos el importe a float para poder sumarlo
+                    importe = float(fila["importe"])
+
+                    # PASO 4: Sumamos el importe de esta carrera al total
+                    total += importe
+
+                    # PASO 4: Mostramos la hora, los segundos y el precio
+                    # PASO 4: >5 alinea la duración a la derecha en 5 espacios
+                    # PASO 4: >8.2f alinea el precio en 8 espacios y muestra dos decimales
+                    # PASO 4: Los espacios permiten que las columnas queden ordenadas
+                    print(
+                        f"  {fila['hora']}  "
+                        f"{fila['duracion_s']:>5} s  "
+                        f"{importe:>8.2f} €"
+                    )
+
+                # PASO 4: Mostramos la suma de todas las carreras de hoy
+                # PASO 4: :.2f hace que siempre aparezcan dos decimales
+                print(f"  Total del día: {total:.2f} €")
 
         # Si la orden es "p" o "m", cambiamos el estado del taxi entre parado y movimiento
         elif orden in ("p", "m"):
